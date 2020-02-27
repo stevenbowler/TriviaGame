@@ -57,84 +57,186 @@ const gameStartScore = 500;
  * @default
  */
 const gameInstructions =
-    "Click &lt;strong>Start Game&lt;/strong> guess composer's name.  " +
-    "You have 30 seconds to live. " +
-    "Or, get hung with 11 bad guesses. " +
-    "Whichever comes first. " +
-    "You will be provided additional clues. " +
+    "Click &lt;strong>Start Game&lt;/strong>  " +
+    "Then select Composer name guess. " +
+    "Lose points for either: " +
+    "  Taking too much time or, " +
+    "  Making bad guesses. " +
     "But more clues and time used, means a lower final score.";
 
 
 // aliases for html form fields accessed
+
+/**
+ * Updated in {@link searchName}, reset to "" in {@link restart}
+ * @type {string} 
+ */
+var userInput = "";
+
+
+/**called from {@link startGameTimer} and {@link stopGameTimer}
+ * @type {*} */
+var timerID;
+
+var radioArray = [];
+
+/**
+ * used in {@link setComposerNames}
+ * @type {string} 
+ */
+var radio1Text = "";
+
+/**
+ * used in {@link setComposerNames}
+ * @type {string} 
+ */
+var radio2Text = "";
+
+/**
+ * used in {@link setComposerNames}
+* @type {string} 
+*/
+var radio3Text = "";
+
+/**
+ * used in {@link setComposerNames}
+* @type {string} 
+*/
+var radio4Text = "";
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const radio1 = $('#radio1');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const radio2 = $('#radio2');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const radio3 = $('#radio3');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const radio4 = $('#radio4');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const composerGuess1 = $('#composerGuess1');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const composerGuess2 = $('#composerGuess2');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const composerGuess3 = $('#composerGuess3');
+
+/**
+ * called from onclick event
+ * @type {JQuery}
+ */
+const composerGuess4 = $('#composerGuess4');
+
 /**
  * Alias for id=composerName getElement
  * @constant
- * @type {string}
+ * @type {JQuery}
  * @default
  */
-const composerName = document.getElementById("composerName");
+const composerName = $("#composerName");   // switch to jquery for homework 5
 
 /**
  * Alias for id=composerPhoto getElement
  * @constant
- * @type {string}
+ * @type {JQuery}
  * @default
  */
-const composerPhoto = document.getElementById("composerPhoto");
+const composerPhoto = $('#composerPhoto');
 
 /**
  * Alias for id=composerHelp getElement
  * @constant
- * @type {string}
+ * @type {JQuery}
  * @default
  */
-const composerHelp = document.getElementById("composerHelp");
+const composerHelp = $('#composerHelp');
 
-/**
- * Alias for id=hangmanPhoto getElement
- * @constant
- * @type {string}
- * @default
- */
-const hangmanPhoto = document.getElementById("hangmanPhoto");
 
 /**
  * Alias for id=composerClues getElement
  * @constant
- * @type {string}
+ * @type {JQuery}
  * @default
  */
-const composerClues = document.getElementById("composerClues");
+const composerClues = $('#composerClues');
 
 /**
  * Alias for id=gameScoreId getElement
  * @constant
- * @type {string}
+ * @type {JQuery}
  * @default
  */
-const gameScoreId = document.getElementById("gameScore");
+const gameScoreId = $("#gameScore");
+
+/**
+ * Alias for id=gameScoreId getElement
+ * @constant
+ * @type {JQuery}
+ * @default
+ */
+const spinnerGrow = $("#spinner-grow");
+
+/**
+ * Alias for id=gameScoreId getElement
+ * @constant
+ * @type {JQuery}
+ * @default
+ */
+const successGif = $("#successGif");
+
+/**
+ * Alias for id=gameScoreId getElement
+ * @constant
+ * @type {JQuery}
+ * @default
+ */
+const failureGif = $("#failureGif");
+
+/** Called from {@link updateScore} number of points deducted per second waiting to make a guess
+ * @constant
+ * @type {number}
+ * @default
+ */
+const gamePointsPerSecond = 5;
 
 /**
  * Alias for id=composerAudio getElement
  * @constant
- * @type {string}
+ * @type {HTMLElement}
  * @default
  */
 const composerAudio = document.getElementById("composerAudio");
 
 /**
- * Constant fun
- * @constant
- * @type {string}
- * @default
- */
-const backSpace = 8;
-
-/**
  * Count of bad guesses 
  * @type {number}
  */
-var characterCount = 0;
+var guessCount = 0;
 
 /**
  * Score for current game starts = gameStartScore 
@@ -142,11 +244,25 @@ var characterCount = 0;
  */
 var gameScore = gameStartScore;
 
+
+
 /**
- * Count of hints allowed, not currently used 
+ * Count of hints used
  * @type {number}
  */
-var hints = 5;
+var hints = 0;
+
+/**
+ * Count of hints used
+ * @type {number}
+ */
+var hintTimerCount = 0;
+
+/**
+ * Count of seconds allowed for each hint
+ * @type {number}
+ */
+var hintTimerMaxCount = 3;
 
 /**
  * gameOn or off to disable clock and score updates
@@ -168,7 +284,7 @@ var composerNameGuess = "";
 
 /**
  * Each erroneous character guess is concatenated to this string then displayed to user
- * @type {number}
+ * @type {string}
  */
 
 var notInComposerName = "";
@@ -200,26 +316,150 @@ var gameComposerVideo = "";
 
 /**
  * Composer names and associated embed youtube videos 
- * @type {Array&lt;{lastName:string, video: string}>}
+ * @type {Array&lt;{lastName:string, 
+ *              firstName: string, 
+ *              rhymesWith: string, 
+ *              birthDay: string, 
+ *              mostPopular: string, 
+ *              video: string}>}
  */
 var composerArray = [
-    { lastName: "bach", video: '&lt;iframe src="https://www.youtube.com/embed/6JQm5aSjX6g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "mozart", video: '&lt;iframe src="https://www.youtube.com/embed/Rb0UmrCXxVA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "debussy", video: '&lt;iframe src="https://www.youtube.com/embed/OUx6ZY60uiI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "beethoven", video: '&lt;iframe src="https://www.youtube.com/embed/QkQapdgAa7o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "strauss", video: '&lt;iframe src="https://www.youtube.com/embed/d4AmYBhGBfM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "dvorak", video: '&lt;iframe src="https://www.youtube.com/embed/3nSEMJW7UqE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "mendelssohn", video: '&lt;iframe src="https://www.youtube.com/embed/sWiCHa9DFOY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "brahms", video: '&lt;iframe src="https://www.youtube.com/embed/zKrxesI3ziE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "haydn", video: '&lt;iframe src="https://www.youtube.com/embed/EmZF3kBZQ6E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "schubert", video: '&lt;iframe src="https://www.youtube.com/embed/iiChxN0T2kA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "vivaldi", video: '&lt;iframe src="https://www.youtube.com/embed/O6NRLYUThrY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "chopin", video: '&lt;iframe src="https://www.youtube.com/embed/wygy721nzRc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "stravinsky", video: '&lt;iframe src="https://www.youtube.com/embed/ne4PoC7V0Mk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "handel", video: '&lt;iframe src="https://www.youtube.com/embed/joVkx20oVIg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "wagner", video: '&lt;iframe src="https://www.youtube.com/embed/4i0TnNI6U-w" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "verdi", video: '&lt;iframe src="https://www.youtube.com/embed/P6sz5b2w9Zc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' },
-    { lastName: "schumann", video: '&lt;iframe src="https://www.youtube.com/embed/QqEWbOzL_GQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>' }
+    {
+        lastName: "bach",
+        firstName: "Johann Sebastian",
+        rhymesWith: "talk",
+        birthDay: "1685",
+        mostPopular: "Brandenburg Concertos",
+        video: '&lt;iframe src="https://www.youtube.com/embed/6JQm5aSjX6g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "mozart",
+        firstName: "Wolfgang Amadeus",
+        rhymesWith: "go start",
+        birthDay: "1756",
+        mostPopular: "Serenade No. 13",
+        video: '&lt;iframe src="https://www.youtube.com/embed/Rb0UmrCXxVA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "debussy",
+        firstName: "Claude",
+        rhymesWith: "you do see",
+        birthDay: "1862",
+        mostPopular: "Pelléas et Mélisande",
+        video: '&lt;iframe src="https://www.youtube.com/embed/OUx6ZY60uiI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "beethoven",
+        firstName: "Johann Sebastian",
+        rhymesWith: "verkoven",
+        birthDay: "1777",
+        mostPopular: "9th Symphony",
+        video: '&lt;iframe src="https://www.youtube.com/embed/QkQapdgAa7o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "strauss",
+        firstName: "Johann",
+        rhymesWith: "house",
+        birthDay: "1825",
+        mostPopular: "Beautiful Blue Danube",
+        video: '&lt;iframe src="https://www.youtube.com/embed/d4AmYBhGBfM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "dvorak",
+        firstName: "Antonin",
+        rhymesWith: "go back",
+        birthDay: "1841",
+        mostPopular: "From The New World Symphony",
+        video: '&lt;iframe src="https://www.youtube.com/embed/3nSEMJW7UqE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "mendelssohn",
+        firstName: "Felix",
+        rhymesWith: "frendelson",
+        birthDay: "1809",
+        mostPopular: "Violin Concerto in E Minor",
+        video: '&lt;iframe src="https://www.youtube.com/embed/sWiCHa9DFOY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "brahms",
+        firstName: "Johannes",
+        rhymesWith: "alms",
+        birthDay: "1833",
+        mostPopular: "Concerto Violin in D Major",
+        video: '&lt;iframe src="https://www.youtube.com/embed/zKrxesI3ziE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "haydn",
+        firstName: "Joseph",
+        rhymesWith: "biden",
+        birthDay: "1732",
+        mostPopular: "The London Symphonies",
+        video: '&lt;iframe src="https://www.youtube.com/embed/EmZF3kBZQ6E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "schubert",
+        firstName: "Franz",
+        rhymesWith: "hubert",
+        birthDay: "1797",
+        mostPopular: "Winterreise",
+        video: '&lt;iframe src="https://www.youtube.com/embed/iiChxN0T2kA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "vivaldi",
+        firstName: "Antonio",
+        rhymesWith: "garibaldi",
+        birthDay: "1777",
+        mostPopular: "Four Seasons",
+        video: '&lt;iframe src="https://www.youtube.com/embed/O6NRLYUThrY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "chopin",
+        firstName: "Frederic",
+        rhymesWith: "hopin",
+        birthDay: "1810",
+        mostPopular: "Nocturne In B-Flat Minor",
+        video: '&lt;iframe src="https://www.youtube.com/embed/wygy721nzRc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "stravinsky",
+        firstName: "Igor",
+        rhymesWith: "kazinsky",
+        birthDay: "1882",
+        mostPopular: "The Rite of Spring",
+        video: '&lt;iframe src="https://www.youtube.com/embed/ne4PoC7V0Mk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "handel",
+        firstName: "Georg Friedricn",
+        rhymesWith: "randall",
+        birthDay: "1685",
+        mostPopular: "Messiah",
+        video: '&lt;iframe src="https://www.youtube.com/embed/joVkx20oVIg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "wagner",
+        firstName: "Wilhelm Richard",
+        rhymesWith: "hagner",
+        birthDay: "1813",
+        mostPopular: "Tristan",
+        video: '&lt;iframe src="https://www.youtube.com/embed/4i0TnNI6U-w" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "verdi",
+        firstName: "Giuseppe",
+        rhymesWith: "dirty",
+        birthDay: "1813",
+        mostPopular: "Rigoletto",
+        video: '&lt;iframe src="https://www.youtube.com/embed/P6sz5b2w9Zc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    },
+    {
+        lastName: "schumann",
+        firstName: "Robert",
+        rhymesWith: "neumann",
+        birthDay: "1810",
+        mostPopular: "Kinderszenen",
+        video: '&lt;iframe src="https://www.youtube.com/embed/QqEWbOzL_GQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>&lt;/iframe>'
+    }
 ];
 
 </code></pre>
@@ -232,13 +472,13 @@ var composerArray = [
 </div>
 
 <nav>
-    <h2><a href="index.html">Word Guess Game</a></h2><h3>Global</h3><ul><li><a href="global.html#animateCSS">animateCSS</a></li><li><a href="global.html#backSpace">backSpace</a></li><li><a href="global.html#characterCount">characterCount</a></li><li><a href="global.html#chooseComposer">chooseComposer</a></li><li><a href="global.html#composerArray">composerArray</a></li><li><a href="global.html#composerAudio">composerAudio</a></li><li><a href="global.html#composerClues">composerClues</a></li><li><a href="global.html#composerHelp">composerHelp</a></li><li><a href="global.html#composerIndex">composerIndex</a></li><li><a href="global.html#composerName">composerName</a></li><li><a href="global.html#composerNameGuess">composerNameGuess</a></li><li><a href="global.html#composerNames">composerNames</a></li><li><a href="global.html#composerPhoto">composerPhoto</a></li><li><a href="global.html#gameComposer">gameComposer</a></li><li><a href="global.html#gameComposerVideo">gameComposerVideo</a></li><li><a href="global.html#gameInstructions">gameInstructions</a></li><li><a href="global.html#gameOn">gameOn</a></li><li><a href="global.html#gameScore">gameScore</a></li><li><a href="global.html#gameScoreId">gameScoreId</a></li><li><a href="global.html#gameStartScore">gameStartScore</a></li><li><a href="global.html#handleFailure">handleFailure</a></li><li><a href="global.html#handleGoodCharacter">handleGoodCharacter</a></li><li><a href="global.html#handleInterim">handleInterim</a></li><li><a href="global.html#handleSuccess">handleSuccess</a></li><li><a href="global.html#hangmanPhoto">hangmanPhoto</a></li><li><a href="global.html#hints">hints</a></li><li><a href="global.html#maxCharacters">maxCharacters</a></li><li><a href="global.html#middleString">middleString</a></li><li><a href="global.html#notInComposerName">notInComposerName</a></li><li><a href="global.html#pauseAudio">pauseAudio</a></li><li><a href="global.html#playAudio">playAudio</a></li><li><a href="global.html#playVideo">playVideo</a></li><li><a href="global.html#previousUserInputLength">previousUserInputLength</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restartYes">restartYes</a></li><li><a href="global.html#searchName">searchName</a></li><li><a href="global.html#updateHangman">updateHangman</a></li><li><a href="global.html#updateScore">updateScore</a></li></ul>
+    <h2><a href="index.html">Trivia Game</a></h2><h3>Events</h3><ul><li><a href="global.html#event:#pausebuttonclickcalls%257B@linkpauseAudio%257D">#pause button click calls {@link pauseAudio}</a></li><li><a href="global.html#event:#playbuttonclickcalls%257B@linkplayAudio%257D">#play button click calls {@link playAudio}</a></li><li><a href="global.html#event:#playVideobuttonclickcalls%257B@linkplayVideo%257D">#playVideo button click calls {@link playVideo}</a></li><li><a href="global.html#event:#radio1calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio1 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio2calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio2 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio3calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio3 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio4calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio4 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#startbuttonclickcalls%257B@linkrestart%257Dtostartthegame">#start button click calls {@link restart} to start the game</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animateCSS">animateCSS</a></li><li><a href="global.html#badGuess">badGuess</a></li><li><a href="global.html#chooseComposer">chooseComposer</a></li><li><a href="global.html#composerArray">composerArray</a></li><li><a href="global.html#composerAudio">composerAudio</a></li><li><a href="global.html#composerClues">composerClues</a></li><li><a href="global.html#composerGuess1">composerGuess1</a></li><li><a href="global.html#composerGuess2">composerGuess2</a></li><li><a href="global.html#composerGuess3">composerGuess3</a></li><li><a href="global.html#composerGuess4">composerGuess4</a></li><li><a href="global.html#composerHelp">composerHelp</a></li><li><a href="global.html#composerIndex">composerIndex</a></li><li><a href="global.html#composerName">composerName</a></li><li><a href="global.html#composerNameGuess">composerNameGuess</a></li><li><a href="global.html#composerNames">composerNames</a></li><li><a href="global.html#composerPhoto">composerPhoto</a></li><li><a href="global.html#failureGif">failureGif</a></li><li><a href="global.html#gameComposer">gameComposer</a></li><li><a href="global.html#gameComposerVideo">gameComposerVideo</a></li><li><a href="global.html#gameInstructions">gameInstructions</a></li><li><a href="global.html#gameOn">gameOn</a></li><li><a href="global.html#gamePointsPerSecond">gamePointsPerSecond</a></li><li><a href="global.html#gameScore">gameScore</a></li><li><a href="global.html#gameScoreId">gameScoreId</a></li><li><a href="global.html#gameStartScore">gameStartScore</a></li><li><a href="global.html#goodGuess">goodGuess</a></li><li><a href="global.html#guessCount">guessCount</a></li><li><a href="global.html#handleFailure">handleFailure</a></li><li><a href="global.html#handleSuccess">handleSuccess</a></li><li><a href="global.html#hints">hints</a></li><li><a href="global.html#hintTimerCount">hintTimerCount</a></li><li><a href="global.html#hintTimerMaxCount">hintTimerMaxCount</a></li><li><a href="global.html#maxCharacters">maxCharacters</a></li><li><a href="global.html#notInComposerName">notInComposerName</a></li><li><a href="global.html#pauseAudio">pauseAudio</a></li><li><a href="global.html#playAudio">playAudio</a></li><li><a href="global.html#previousUserInputLength">previousUserInputLength</a></li><li><a href="global.html#radio1">radio1</a></li><li><a href="global.html#radio1Text">radio1Text</a></li><li><a href="global.html#radio2">radio2</a></li><li><a href="global.html#radio2Text">radio2Text</a></li><li><a href="global.html#radio3">radio3</a></li><li><a href="global.html#radio3Text">radio3Text</a></li><li><a href="global.html#radio4">radio4</a></li><li><a href="global.html#radio4Text">radio4Text</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restartYes">restartYes</a></li><li><a href="global.html#setComposerNames">setComposerNames</a></li><li><a href="global.html#spinnerGrow">spinnerGrow</a></li><li><a href="global.html#startGameTimer">startGameTimer</a></li><li><a href="global.html#stopGameTimer">stopGameTimer</a></li><li><a href="global.html#successGif">successGif</a></li><li><a href="global.html#timerID">timerID</a></li><li><a href="global.html#top">top</a></li><li><a href="global.html#updateHints">updateHints</a></li><li><a href="global.html#updateScore">updateScore</a></li><li><a href="global.html#updateTimerField">updateTimerField</a></li><li><a href="global.html#userInput">userInput</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Feb 12 2020 12:23:36 GMT-0600 (Central Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Feb 27 2020 15:25:56 GMT-0600 (Central Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

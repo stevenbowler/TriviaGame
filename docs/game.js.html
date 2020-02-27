@@ -27,267 +27,388 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>// @ts-check
-//unanswered questions 10feb2020:
-//  1. how to playAudio on load, stack overflow suggestions below don't work ... yet, autoplay works on GitHub sort of, not locally
-//  2. how to pauseAudio onclick of youtube iframe embed
-//  3. local youtube embed does not work, only on GitHub
-
-//document.getElementById("composerClues").addEventListener("click", pauseAudio());
-
-//document.getElementsByTagName("body").addEventListener("load", playAudio());
-
-// document.getElementById("gameStatus").addEventListener("load", playAudio());
-
-
-/**
- * Called from oninput input event, each time user touches key
- * @function searchName
- */
-const searchName = () => {
-    /**
-     * User input assigned in lower case
-     * @type {string}
-     */
-    var userInput = composerName.value.toLowerCase();
-    if (!gameOn) { restart(); return; } //after success, any next keystroke restarts game. 
-    if (userInput.length &lt; previousUserInputLength) { --previousUserInputLength; return; }// if deleting chars don't update hangman
-    else previousUserInputLength = userInput.length;
-    console.log("userInput: ", userInput, " gameComposer: ", gameComposer);
-    console.log("call to handleInterim userInput: ", userInput.slice(-1));
-    if (userInput === gameComposer) handleSuccess();
-    else handleInterim(userInput);
-}
-
-
-
-/**
- * Called from searchName when match to composerName is found
- * @function handleSuccess
- */
-const handleSuccess = () => {
-    composerHelp.innerHTML = "SUCCESS ... GREAT WORK!";
-    hangmanPhoto.src = "./assets/img/hangmanSuccess.png";
-    animateCSS('#hangmanPhoto', 'tada');
-    clearInterval(timerID);
-    //pauseAudio();
-    playVideo();
-    //document.getElementById("ytp-button").addEventListener("click", pauseAudio());
-    //document.getElementById("composerClues").addEventListener("click", pauseAudio());
-    //document.getElementById("gameScore").focus();
-    gameOn = false;
-
-}
-
-
-/**
- * Called from searchName oninput with each keystroke but composerName not matched yet, 
- *      add good guesses to good guess string,
- *      add bad guesses to bad guess string,
- *      display both good and bad guesses in composerHelp field.
- *  @function handleInterim
-    @param {string} userInput ... from searchName, user's latest composerName guess
- */
-const handleInterim = (userInput) => {
-    console.log("handleInterim userInput: ", userInput.slice(-1), "index = -1?: ", gameComposer.indexOf(userInput.slice(-1)));
-    if (gameComposer.indexOf(userInput.slice(-1)) >= 0) {
-        composerNameGuess = handleGoodCharacter(composerNameGuess, gameComposer.indexOf(userInput.slice(-1)), userInput.slice(-1));
-        console.log("composerNameGuess: ", composerNameGuess);
-    } else {// if char not in composerName
-        notInComposerName = notInComposerName + userInput.slice(-1);
-        ++characterCount;
-        updateHangman(characterCount);
-    }
-
-    switch (characterCount) {
-        case 0: composerHelp.innerHTML = "Hint: " + composerNameGuess; break;
-        case 1: composerHelp.innerHTML = "Hint: " + composerNameGuess; break;
-        case 2: composerHelp.innerHTML = "Hint: " + composerNameGuess.substr(0, gameComposer.length - 1) + gameComposer.slice(-1); break;
-        case 3: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 1) + composerNameGuess.substr(1, composerNameGuess.length - 2) + gameComposer.slice(-1); break;
-        case 4: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 1) + composerNameGuess.substr(1, composerNameGuess.length - 3) + gameComposer.slice(-2); break;
-        case 5: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2); break;
-        case 6: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2) + " 5 guesses left"; break;
-        case 7: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2) + " 4 guesses left"; break;
-        case 8: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2) + " 3 guesses left"; break;
-        case 8: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2) + " 2 guesses left"; break;
-        case 10: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2) + " 1 guesses left"; break;
-        case 11: composerHelp.innerHTML = "Hint: " + gameComposer.slice(0, 2) + composerNameGuess.substr(2, composerNameGuess.length - 4) + gameComposer.slice(-2); break;
-        default: break;
-    }
-    if (notInComposerName !== "" &amp;&amp; (composerHelp.innerHTML.indexOf("Composer")) == -1) composerHelp.innerHTML = composerHelp.innerHTML + "  Not in Composer name: " + notInComposerName;
-    else composerHelp.innerHTML = composerHelp.innerHTML + notInComposerName.slice(-1);
-    if (characterCount >= 11) handleFailure();
-}
-
-
-/**
- * Called from handleInterim case to fill out the un-guessed section of composerGuess with underscores
- * @function middleString
- * @param {number} stringLength  Build a string of underscores to fill the spaces in composerGuess field
- * @returns {string} of underscores of stringLength
- */
-const middleString = (stringLength) => {
-    /**
-     * @type {string}
-     */
-    var underscoreString = "";
-    for (var i = 0; i &lt; stringLength; ++i) underscoreString = underscoreString + "_";
-    return (underscoreString);
-}
-
-/**
- * Called from handleInterim when a valid guess entered is added to the string of good guesses,
- *          add the correctly guessed letter chr into the string str at position index.
- * @function handleGoodCharacter
- * @param {string} str String to have chr inserted at index
- * @param {number} index Location to insert chr
- * @param {string} chr Character to be inserted, last in string userInput from searchName
- * @returns {string} with chr inserted in str at index
- */
-const handleGoodCharacter = (str, index, chr) => {
-    if (index > str.length - 1) return str;
-    return str.substr(0, index) + chr + str.substr(index + 1);
-}
 
 /** 
- * Called from handleInterim when characterCount > 11 i.e. max guesses exceeded,
- *      when max guesses exceeded shut everything down, zero everything out, display failure hangman
- * @function handleFailure
+ * @top
+ * @function top
+ * @todo how to {@link pauseAudio} onclick of youtube iframe embed, i.e. play one or the other.
+ * 
  * */
-const handleFailure = () => {
-    gameScore = 0;
-    // gameScoreId.attributes.ariaValuenow = Math.round(gameScore / 5).toString();
-    // gameScoreId.style.width = Math.round(gameScore / 5).toString() + "%";
-    gameScoreId.innerHTML = gameScore;
-    clearInterval(timerID);
-    gameOn = false;
-    composerHelp.innerHTML = "Sorry, you blew it, it was: " + gameComposer.charAt(0).toUpperCase() + gameComposer.slice(1);  //str.charAt(0).toUpperCase() + str.slice(1);
-    hangmanPhoto.src = "./assets/img/hangmanOuch.png"
-    animateCSS('#hangmanPhoto', 'shake');
-}
 
-/** 
- * Called from 3 places: navbar start, start game button, or from composerName field oninput after success
- * @function restart
-*/
-const restart = () => {
-    gameOn = true;
-    characterCount = 0;
-    previousUserInputLength = 0;
-    updateHangman(characterCount);
-    chooseComposer();
-    notInComposerName = "";
-    composerNameGuess = middleString(gameComposer.length);
-    composerName.value = "";
-    composerHelp.innerHTML = "Take your best shot";
-    composerClues.innerHTML = gameInstructions;
-    animateCSS('#composerClues', 'zoomInRight');
-    composerName.focus();
-    gameScore = gameStartScore;
-    timerID = setInterval(
-        () => updateScore(),
-        1000);
-    console.log("restart");
-}
+$(document).ready(function () {
 
-/** Called from the one second timerID within restart()
- * @function updateScore
- */
-const updateScore = () => {
-    if (characterCount == 0) gameScore = gameScore - hints;
-    gameScore = gameScore - (hints * characterCount); // score drops faster if user uses more characters
-    gameScoreId.innerHTML = gameScore;
-    gameScoreId.attributes.ariaValuenow = Math.round(gameScore / 5).toString();
-    gameScoreId.style.width = Math.round(gameScore / 5).toString() + "%";
-    if (gameScore &lt;= 0) handleFailure();
-}
 
-/** 
- * Called from restart() and handleInterim to update the image of the hangman to latest guess count
- * @function updateHangman
- * @param {number} count  Used to index to image files for corresponding guess
-*/
-const updateHangman = (count) => {
-    if (count >= maxCharacters) handleFailure();
-    else {
-        var imageURL = "./assets/img/hangman" + count.toString() + ".png";
-        // if restart then zoom out old zoom in new
-        if (count == 0) animateCSS('#hangmanPhoto', 'zoomOutLeft', function () {
-            hangmanPhoto.src = imageURL;
-            animateCSS('#hangmanPhoto', 'zoomInLeft');
-        });
-        // else regular game processing, change from hangmanPhoto n-1 to hangmanPhoto n
-        else {
-            hangmanPhoto.src = imageURL;
-            animateCSS('#hangmanPhoto', 'headShake');
-        }
-    }
-}
-
-/** Called from restart to choose a new composer from the array of 15 composers
- * @function chooseComposer
-*/
-const chooseComposer = () => {
-    composerIndex = parseInt(Math.random() * 17);
-    console.log("random choice of Composer:  ", composerArray[composerIndex].lastName);
-    gameComposer = composerArray[composerIndex].lastName;
-    gameComposerVideo = composerArray[composerIndex].video;
-    //console.log("random choice of Composer video:  ", composerArray[composerIndex].video);
-    animateCSS('#composerPhoto', 'zoomOutRight', function () {
-        composerPhoto.src = "./assets/img/" + gameComposer + ".jpeg";
-        animateCSS('#composerPhoto', 'zoomInRight')
+    /** 
+     * @event #radio1 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game 
+     * */
+    radio1.on("click", function () {
+        console.log("composerGuess1.html ", composerGuess1.text());
+        if (composerGuess1.text().toLowerCase() === gameComposer) goodGuess();
+        else badGuess();
     });
-    //composerAudio.src = "./assets/audio/" + "debussy" + ".mp3";
-    composerAudio.src = "./assets/audio/" + gameComposer + ".mp3";
-    playAudio();
-}
 
-/** 
- * Called from restart() or from play music button on home screen
- * @function playAudio
- */
-const playAudio = () => {
-    composerAudio.play();
-}
 
-/** 
- * Called from pause music button on home screen
- * @function pauseAudio
- */
-const pauseAudio = () => {
-    composerAudio.pause();
-}
+    /** 
+     * @event #radio2 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game 
+     * */
+    radio2.on("click", function () {
+        console.log("composerGuess1.html ", composerGuess2.text());
+        if (composerGuess2.text().toLowerCase() === gameComposer) goodGuess();
+        else badGuess();
 
-/**
- * Called from handleSuccess when composerName found offers youtube video in composerClues div on home screen
- */
-const playVideo = () => {
-    composerClues.innerHTML = gameComposerVideo;
-    animateCSS('#composerClues', 'zoomInRight');
-}
+    });
 
-/**
- * Called from various points to animate unload load of content in divs,
- *      from GitHub animate.css library
- * @async
- * @function animateCSS
- * @param {*} element div id/class/tag to be modified
- * @param {*} animationName from list of animateCSS classes
- * @param {*} [callback] required if unloading before loading div with content, async
- */
-const animateCSS = (element, animationName, callback) => {
-    const node = document.querySelector(element)
-    node.classList.add('animated', animationName)
 
-    function handleAnimationEnd() {
-        node.classList.remove('animated', animationName)
-        node.removeEventListener('animationend', handleAnimationEnd)
+    /** 
+     * @event #radio3 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game 
+     * */
+    radio3.on("click", function () {
+        console.log("composerGuess1.html ", composerGuess3.text());
+        if (composerGuess3.text().toLowerCase() === gameComposer) goodGuess();
+        else badGuess();
 
-        if (typeof callback === 'function') callback()
+    });
+
+
+    /** 
+     * @event #radio4 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game 
+     * */
+    radio4.on("click", function () {
+        console.log("composerGuess1.html ", composerGuess4.text());
+        if (composerGuess4.text().toLowerCase() === gameComposer) goodGuess();
+        else badGuess();
+
+    });
+
+
+    /**
+     * called from {@link radio1}, radio2, radio3, radio4 onclick events if was wrong guess
+     * @function goodGuess
+     */
+    const goodGuess = () => {
+        console.log("goodGuess");
+        handleSuccess();
+
     }
 
-    node.addEventListener('animationend', handleAnimationEnd)
-}
-</code></pre>
+
+    /**
+     * called from {@link radio1}, radio2, radio3, radio4 onclick events if was wrong guess
+     * @function badGuess
+     */
+    const badGuess = () => {
+        console.log("badGuess");
+        ++guessCount;
+        gameScore = gameScore - 125;
+        composerHelp.html("Bad guess, try again, clock is ticking");
+    }
+
+
+    /** 
+     * @event #start button click calls {@link restart} to start the game 
+     * */
+    $("#start").on("click", function () {
+        restart();
+    });
+
+
+    /**
+     * @event #play button click calls {@link playAudio} 
+     * */
+    $("#play").on("click", function () {
+        playAudio();
+    });
+
+
+    /** 
+     * @event #pause button click calls {@link pauseAudio} 
+     * */
+    $("#pause").on("click", function () {
+        pauseAudio();
+    });
+
+
+    /** 
+     * @event #playVideo button click calls {@link playVideo} 
+     * */
+    $("#playVideo").on("click", function () {
+        playVideo();
+    });
+
+
+    /** 
+     * Called from {@link updateScore} when {@link gameScore} &lt; 0 
+     * shut everything down, zero everything out, display failure, calls {@link stopGameTimer}, {@link animateCSS}.
+     * @function handleFailure
+     * */
+    const handleFailure = () => {
+        composerHelp.html("Yikes ... you blew it!");
+        spinnerGrow.css({ display: "none" });
+        successGif.css({ display: "none" });
+        stopGameTimer();
+        failureGif.css({ display: "block" });
+        animateCSS("#failureGif", "zoomInRight");
+    }
+
+
+    /**
+     * Called from {@link radio1} when match to composerName is found, calls {@link stopGameTimer}, turn on Success.gif display
+     * @function handleSuccess
+     */
+    const handleSuccess = () => {
+        composerHelp.html("SUCCESS ... GREAT WORK!");
+        spinnerGrow.css({ display: "none" });
+        failureGif.css({ display: "none" });
+        stopGameTimer();
+        successGif.css({ display: "block" });
+        animateCSS("#successGif", "zoomInRight");
+    }
+
+
+    /**
+     * Called from {@link restart} to set game timer then calls {@link updateScore} to react to current hint/guess conditions
+     * @function startGameTimer
+     */
+    const startGameTimer = () => {
+        console.log("startGameTimer");
+        timerID = setInterval(
+            () => updateScore(),
+            1000);
+    }
+
+
+    /**
+     * called from {@link handleFailure} if {@link gameScore} &lt; 0 or from {@link handleSuccess} if guess composerName correct
+     *      turn off game timer when each round of the game
+     * @function stopGameTimer
+     */
+    const stopGameTimer = () => {
+        clearInterval(timerID);
+    }
+
+
+    /** 
+     * Called from the one second interval {@link startGameTimer} within {@link restart}
+     * @function updateScore
+     */
+    const updateScore = () => {
+        //updateTimerField();
+        updateHints();
+        if (guessCount == 0) gameScore = gameScore - hints;
+        gameScore = gameScore - ((hints + guessCount) * gamePointsPerSecond); // score drops faster if user uses more hints and guesses
+        console.log("updateScore gameScore: ", gameScore);
+        gameScoreId.html(gameScore.toString());
+        gameScoreId.attr("ariaValuenow", Math.round(gameScore / 5).toString());
+        gameScoreId.css("width", Math.round(gameScore / 5).toString() + "%");
+        if (gameScore &lt;= 0) handleFailure();
+    }
+
+
+    /** 
+     * Called from 3 places: navbar start, start game button event, or from composerName field oninput after success
+     * @function restart
+     */
+    const restart = () => {
+        radio1.prop('checked', false);
+        radio2.prop('checked', false);
+        radio3.prop('checked', false);
+        radio4.prop('checked', false);
+        gameOn = true;
+        hints = 0;
+        hintTimerCount = 0;
+        guessCount = 0;
+        chooseComposer();           // choose the target Composer
+
+        updateTimerField();
+        setComposerNames();         // sets all four composerGuess names to align with 4 radio option, composerGuess1 = gameComposer
+        //@ts-ignore
+        composerHelp.html("Who's the guy in the picture?");
+        composerClues.html(gameInstructions);
+        animateCSS('#composerClues', 'zoomInRight');
+        gameScore = gameStartScore;
+        //@ts-ignore
+        startGameTimer()
+        console.log("restart");
+    }
+
+
+    /** 
+     * Called from {@link restart} and {@link handleInterim} to update the image of the timerField
+     * @function updateTimerField
+     */
+    const updateTimerField = () => {
+        console.log("updateTimerField: ");
+        successGif.css({ display: "none" });
+        failureGif.css({ display: "none" });
+        spinnerGrow.css({ display: "block" });
+        // composerClues.html(gameInstructions);
+        animateCSS('#timerField', 'zoomInRight');
+    }
+
+
+    /**
+     * Called from {@link updateScore} on submit event from radio buttons, but composerName not matched yet, 
+     *  @function updateHints
+     */
+    const updateHints = () => {
+        console.log("updateHint: ", hints, "guessCount : ", guessCount);
+        if (hintTimerCount &lt; hintTimerMaxCount) { ++hintTimerCount; return; }
+        hintTimerCount = 0; // gets reset to zero each time the hint timer reaches max = seconds before next hint displayed/score reduced.
+
+        switch (hints) {
+            case 0: { composerHelp.html("Hint ... First name: " + composerArray[composerIndex].firstName); ++hints; break; }
+            case 1: { composerHelp.html("Hint ... Born in: " + composerArray[composerIndex].birthDay); ++hints; break; }
+            case 2: { composerHelp.html("Hint ... Best known music: " + composerArray[composerIndex].mostPopular); ++hints; break; }
+            case 3: { composerHelp.html("Hint ... Last name rhymes with: " + composerArray[composerIndex].rhymesWith); ++hints; break; }
+            default: break;
+        }
+
+    }
+
+
+    /** 
+     * Called from {@link restart} to choose a new composer from the array of 15 composers
+     * @function chooseComposer
+    */
+    const chooseComposer = () => {
+        //@ts-ignore
+        composerIndex = parseInt(Math.random() * 17); //parseInt(Math.random() * 17); // worked when it was like this but wrong type
+        console.log("composerIndex: ", composerIndex);
+        console.log("random choice of Composer:  ", composerArray[composerIndex].lastName);
+        gameComposer = composerArray[composerIndex].lastName;
+        gameComposerVideo = composerArray[composerIndex].video;
+        //console.log("random choice of Composer video:  ", composerArray[composerIndex].video);
+        animateCSS('#composerPhoto', 'zoomOutRight', function () {
+            //@ts-ignore
+            composerPhoto.attr('src', "./assets/img/" + gameComposer + ".jpeg");
+            animateCSS('#composerPhoto', 'zoomInRight')
+        });
+        //composerAudio.src = "./assets/audio/" + "debussy" + ".mp3";
+        //@ts-ignore
+        composerAudio.src = "./assets/audio/" + gameComposer + ".mp3";
+        playAudio();
+
+    }
+
+
+    /**
+     * Random select composer names, then random select position in 4 position radio selector on screen.
+     * called from {@link restart} to set list of names for radio choices {@link radioChoice1} is the target {@link composerIndex} in {@link composerArray}
+     * @function setComposerNames
+     */
+    const setComposerNames = () => {
+        // Random selection of composer names
+        // target composerName index
+        var radioChoice1 = composerIndex;
+        //random pick 1st decoy composerName index
+        var radioChoice2 = Math.floor(Math.random() * 17);
+        while (radioChoice2 == composerIndex)
+            radioChoice2 = Math.floor(Math.random() * 17);
+        //random pick 2nd decoy composerName index
+        var radioChoice3 = Math.floor(Math.random() * 17);
+        while (radioChoice3 == composerIndex ||
+            radioChoice3 == radioChoice2)
+            radioChoice3 = Math.floor(Math.random() * 17);
+        //random pick 3rd decoy composerName index
+        var radioChoice4 = Math.round(Math.random() * 17);
+        while (radioChoice4 == composerIndex ||
+            radioChoice4 == radioChoice2 ||
+            radioChoice4 == radioChoice3)
+            radioChoice4 = Math.round(Math.random() * 17);
+
+        // the 4 composer names need to be set in random positions in the radio selection
+        var targetRadioChoice = Math.floor(Math.random() * 4);
+        switch (targetRadioChoice) {
+            case 0: {
+                radio1Text = composerArray[radioChoice1].lastName;
+                radio2Text = composerArray[radioChoice2].lastName;
+                radio3Text = composerArray[radioChoice3].lastName;
+                radio4Text = composerArray[radioChoice4].lastName;
+                break;
+            }
+            case 1: {
+                radio1Text = composerArray[radioChoice2].lastName;
+                radio2Text = composerArray[radioChoice1].lastName;
+                radio3Text = composerArray[radioChoice3].lastName;
+                radio4Text = composerArray[radioChoice4].lastName;
+                break;
+            }
+            case 2: {
+                radio1Text = composerArray[radioChoice3].lastName;
+                radio2Text = composerArray[radioChoice2].lastName;
+                radio3Text = composerArray[radioChoice1].lastName;
+                radio4Text = composerArray[radioChoice4].lastName;
+                break;
+            }
+            case 3: {
+                radio1Text = composerArray[radioChoice4].lastName;
+                radio2Text = composerArray[radioChoice2].lastName;
+                radio3Text = composerArray[radioChoice3].lastName;
+                radio4Text = composerArray[radioChoice1].lastName;
+                break;
+            }
+
+        }
+        composerGuess1.html(radio1Text);
+        composerGuess2.html(radio2Text);
+        composerGuess3.html(radio3Text);
+        composerGuess4.html(radio4Text);
+    }
+
+    /** 
+     * Called from {@link restart} or from play music button on home screen
+     * @function playAudio
+     */
+    const playAudio = () => {
+        //@ts-ignore
+        composerAudio.play();
+    }
+
+
+    /** 
+     * Called from pause music button on home screen
+     * @function pauseAudio
+     */
+    const pauseAudio = () => {
+        //@ts-ignore
+        composerAudio.pause();
+    }
+
+
+    /**
+     * Called from handleSuccess when composerName found offers youtube video in composerClues div on home screen
+     */
+    const playVideo = () => {
+        composerClues.html(gameComposerVideo);
+        animateCSS('#composerClues', 'zoomInRight');
+    }
+
+
+    /**
+     * Called from various points to animate unload load of content in divs,
+     *      from GitHub animate.css library
+     * @async
+     * @function animateCSS
+     * @param {*} element div id/class/tag to be modified
+     * @param {*} animationName from list of animateCSS classes
+     * @param {*} [callback] required if unloading before loading div with content, async
+     */
+    const animateCSS = (element, animationName, callback) => {
+        const node = document.querySelector(element)
+        node.classList.add('animated', animationName)
+
+        function handleAnimationEnd() {
+            node.classList.remove('animated', animationName)
+            node.removeEventListener('animationend', handleAnimationEnd)
+
+            if (typeof callback === 'function') callback()
+        }
+
+        node.addEventListener('animationend', handleAnimationEnd)
+    }
+
+
+});</code></pre>
         </article>
     </section>
 
@@ -297,13 +418,13 @@ const animateCSS = (element, animationName, callback) => {
 </div>
 
 <nav>
-    <h2><a href="index.html">Word Guess Game</a></h2><h3>Global</h3><ul><li><a href="global.html#animateCSS">animateCSS</a></li><li><a href="global.html#backSpace">backSpace</a></li><li><a href="global.html#characterCount">characterCount</a></li><li><a href="global.html#chooseComposer">chooseComposer</a></li><li><a href="global.html#composerArray">composerArray</a></li><li><a href="global.html#composerAudio">composerAudio</a></li><li><a href="global.html#composerClues">composerClues</a></li><li><a href="global.html#composerHelp">composerHelp</a></li><li><a href="global.html#composerIndex">composerIndex</a></li><li><a href="global.html#composerName">composerName</a></li><li><a href="global.html#composerNameGuess">composerNameGuess</a></li><li><a href="global.html#composerNames">composerNames</a></li><li><a href="global.html#composerPhoto">composerPhoto</a></li><li><a href="global.html#gameComposer">gameComposer</a></li><li><a href="global.html#gameComposerVideo">gameComposerVideo</a></li><li><a href="global.html#gameInstructions">gameInstructions</a></li><li><a href="global.html#gameOn">gameOn</a></li><li><a href="global.html#gameScore">gameScore</a></li><li><a href="global.html#gameScoreId">gameScoreId</a></li><li><a href="global.html#gameStartScore">gameStartScore</a></li><li><a href="global.html#handleFailure">handleFailure</a></li><li><a href="global.html#handleGoodCharacter">handleGoodCharacter</a></li><li><a href="global.html#handleInterim">handleInterim</a></li><li><a href="global.html#handleSuccess">handleSuccess</a></li><li><a href="global.html#hangmanPhoto">hangmanPhoto</a></li><li><a href="global.html#hints">hints</a></li><li><a href="global.html#maxCharacters">maxCharacters</a></li><li><a href="global.html#middleString">middleString</a></li><li><a href="global.html#notInComposerName">notInComposerName</a></li><li><a href="global.html#pauseAudio">pauseAudio</a></li><li><a href="global.html#playAudio">playAudio</a></li><li><a href="global.html#playVideo">playVideo</a></li><li><a href="global.html#previousUserInputLength">previousUserInputLength</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restartYes">restartYes</a></li><li><a href="global.html#searchName">searchName</a></li><li><a href="global.html#updateHangman">updateHangman</a></li><li><a href="global.html#updateScore">updateScore</a></li></ul>
+    <h2><a href="index.html">Trivia Game</a></h2><h3>Events</h3><ul><li><a href="global.html#event:#pausebuttonclickcalls%257B@linkpauseAudio%257D">#pause button click calls {@link pauseAudio}</a></li><li><a href="global.html#event:#playbuttonclickcalls%257B@linkplayAudio%257D">#play button click calls {@link playAudio}</a></li><li><a href="global.html#event:#playVideobuttonclickcalls%257B@linkplayVideo%257D">#playVideo button click calls {@link playVideo}</a></li><li><a href="global.html#event:#radio1calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio1 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio2calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio2 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio3calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio3 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio4calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio4 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#startbuttonclickcalls%257B@linkrestart%257Dtostartthegame">#start button click calls {@link restart} to start the game</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animateCSS">animateCSS</a></li><li><a href="global.html#badGuess">badGuess</a></li><li><a href="global.html#chooseComposer">chooseComposer</a></li><li><a href="global.html#composerArray">composerArray</a></li><li><a href="global.html#composerAudio">composerAudio</a></li><li><a href="global.html#composerClues">composerClues</a></li><li><a href="global.html#composerGuess1">composerGuess1</a></li><li><a href="global.html#composerGuess2">composerGuess2</a></li><li><a href="global.html#composerGuess3">composerGuess3</a></li><li><a href="global.html#composerGuess4">composerGuess4</a></li><li><a href="global.html#composerHelp">composerHelp</a></li><li><a href="global.html#composerIndex">composerIndex</a></li><li><a href="global.html#composerName">composerName</a></li><li><a href="global.html#composerNameGuess">composerNameGuess</a></li><li><a href="global.html#composerNames">composerNames</a></li><li><a href="global.html#composerPhoto">composerPhoto</a></li><li><a href="global.html#failureGif">failureGif</a></li><li><a href="global.html#gameComposer">gameComposer</a></li><li><a href="global.html#gameComposerVideo">gameComposerVideo</a></li><li><a href="global.html#gameInstructions">gameInstructions</a></li><li><a href="global.html#gameOn">gameOn</a></li><li><a href="global.html#gamePointsPerSecond">gamePointsPerSecond</a></li><li><a href="global.html#gameScore">gameScore</a></li><li><a href="global.html#gameScoreId">gameScoreId</a></li><li><a href="global.html#gameStartScore">gameStartScore</a></li><li><a href="global.html#goodGuess">goodGuess</a></li><li><a href="global.html#guessCount">guessCount</a></li><li><a href="global.html#handleFailure">handleFailure</a></li><li><a href="global.html#handleSuccess">handleSuccess</a></li><li><a href="global.html#hints">hints</a></li><li><a href="global.html#hintTimerCount">hintTimerCount</a></li><li><a href="global.html#hintTimerMaxCount">hintTimerMaxCount</a></li><li><a href="global.html#maxCharacters">maxCharacters</a></li><li><a href="global.html#notInComposerName">notInComposerName</a></li><li><a href="global.html#pauseAudio">pauseAudio</a></li><li><a href="global.html#playAudio">playAudio</a></li><li><a href="global.html#previousUserInputLength">previousUserInputLength</a></li><li><a href="global.html#radio1">radio1</a></li><li><a href="global.html#radio1Text">radio1Text</a></li><li><a href="global.html#radio2">radio2</a></li><li><a href="global.html#radio2Text">radio2Text</a></li><li><a href="global.html#radio3">radio3</a></li><li><a href="global.html#radio3Text">radio3Text</a></li><li><a href="global.html#radio4">radio4</a></li><li><a href="global.html#radio4Text">radio4Text</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restartYes">restartYes</a></li><li><a href="global.html#setComposerNames">setComposerNames</a></li><li><a href="global.html#spinnerGrow">spinnerGrow</a></li><li><a href="global.html#startGameTimer">startGameTimer</a></li><li><a href="global.html#stopGameTimer">stopGameTimer</a></li><li><a href="global.html#successGif">successGif</a></li><li><a href="global.html#timerID">timerID</a></li><li><a href="global.html#top">top</a></li><li><a href="global.html#updateHints">updateHints</a></li><li><a href="global.html#updateScore">updateScore</a></li><li><a href="global.html#updateTimerField">updateTimerField</a></li><li><a href="global.html#userInput">userInput</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Feb 12 2020 12:23:36 GMT-0600 (Central Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Feb 27 2020 15:25:56 GMT-0600 (Central Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

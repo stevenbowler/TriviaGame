@@ -18,5 +18,8 @@
   "homepage": "https://github.com/stevenbowler/Word-Guess-Game#readme",
   "devDependencies": {
     "jsdoc": "^3.6.3"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.3.33"
   }
 }
