@@ -114,12 +114,18 @@ $(document).ready(function () {
      * @function handleFailure
      * */
     const handleFailure = () => {
+        ++numberRounds;
         composerHelp.html("Yikes ... you blew it!");
         spinnerGrow.css({ display: "none" });
         successGif.css({ display: "none" });
         stopGameTimer();
         failureGif.css({ display: "block" });
         animateCSS("#failureGif", "zoomInRight");
+        delay();
+        if (numberRounds >= maxRounds) { endAll(); return; }
+        setTimeout(
+            () => restart(),
+            5000);
     }
 
 
@@ -128,14 +134,31 @@ $(document).ready(function () {
      * @function handleSuccess
      */
     const handleSuccess = () => {
+        ++numberRounds;
+        ++correctGuess;
+        gameScoreTotal = gameScoreTotal + gameScore;
         composerHelp.html("SUCCESS ... GREAT WORK!");
         spinnerGrow.css({ display: "none" });
         failureGif.css({ display: "none" });
         stopGameTimer();
         successGif.css({ display: "block" });
         animateCSS("#successGif", "zoomInRight");
+        if (numberRounds >= maxRounds) { endAll(); return; }
+        setTimeout(
+            () => restart(),
+            5000);
     }
 
+    const delay = () => {
+
+    }
+
+    const endAll = () => {
+        composerHelp.html("Total Score: " + gameScoreTotal + " with " + correctGuess + " correct out of " + maxRounds);
+        correctGuess = 0;
+        numberRounds = 0;
+        gameScoreTotal = 0;
+    }
 
     /**
      * Called from {@link restart} to set game timer then calls {@link updateScore} to react to current hint/guess conditions

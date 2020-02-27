@@ -30,7 +30,8 @@ const gameStartScore = 500;
  */
 const gameInstructions =
     "Click <strong>Start Game</strong>  " +
-    "Then select Composer name guess. " +
+    "Guess three separate composer names. " +
+    "Each from among list of 4 names provided" +
     "Lose points for either: " +
     "  Taking too much time or, " +
     "  Making bad guesses. " +
@@ -40,7 +41,6 @@ const gameInstructions =
 // aliases for html form fields accessed
 
 /**
- * Updated in {@link searchName}, reset to "" in {@link restart}
  * @type {string} 
  */
 var userInput = "";
@@ -211,10 +211,34 @@ const composerAudio = document.getElementById("composerAudio");
 var guessCount = 0;
 
 /**
+ * Each time player correctly guesses name of composer
+ * @type {number}
+ */
+var correctGuess = 0;
+
+/**
  * Score for current game starts = gameStartScore 
  * @type {number}
  */
 var gameScore = gameStartScore;
+
+/**
+ * Sum of {@link gameScore} total from each of the the {@link numberRounds} played
+ * @type {number} totalScore
+ */
+var gameScoreTotal = 0;
+
+/**
+ * numberRounds played up to {@link maxRounds}
+ * @type {number} numberRounds
+ */
+var numberRounds = 0;
+
+/**
+ * Maximum number of Rounds to play
+ * @type {number} numberRounds
+ */
+const maxRounds = 3;
 
 
 
