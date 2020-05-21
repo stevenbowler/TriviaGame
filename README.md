@@ -1,7 +1,7 @@
 # TriviaGame
 
 ### Overview
-This game provides a fun way for the player to encounter some of the finest classical music ever created by some of the world's greatest composers.    Additionally, the creation of the game has enabled this developer to build technical skills in the of multi-media in an app.
+This game provides a fun way for the player to encounter some of the finest classical music ever created by some of the world's greatest composers.    Additionally, the creation of the game has enabled this developer to build technical skills in the building of a multi-media app.
 
 ### User Documentation
 It is recommended first to watch [this video](https://drive.google.com/file/d/16TsD8GF4j00rvGro6jtZyWDOWXkfQiyA/view).
