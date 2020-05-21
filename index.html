@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <title>Homework 5</title>
+    <title>Trivia Game</title>
 </head>
 
 <body>
@@ -79,17 +79,11 @@
                 </div>
 
                 <div class="col-sm animated zoomInLeft delay-0s" style="background-color: black;" id=timerField>
-                    <!-- <div class="spinner-border text-light" style="width: 12rem; height: 12rem; top: 50px;"
-                        role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div> -->
+
                     <div id="spinner-grow" class="text-light delay-5s"
                         style="width: 30rem; height: 24rem; background-color: black" role="status">
-                        <!-- <span class="sr-only"> -->
                         <img id="conductor" src="./assets/img/conductor.gif" alt="no photo found"
                             transition-duration="2s" class="center">
-
-                        <!-- </span> -->
                     </div>
                     <img id="successGif" src="./assets/img/success.gif" style="display: none;" alt="no photo found"
                         transition-duration="2s" class="center">
@@ -119,8 +113,7 @@
                                         <small id="composerGuess1" class="form-text text-light">Bach </small>
                                     </div>
                                     <div class="col">
-                                        <!-- <input type="text" class="form-control bg-dark text-light"
-                                    aria-label="Text input with checkbox"> -->
+
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">
                                                 <input id="radio2" type="radio"
@@ -129,8 +122,7 @@
                                         </div>
                                         <small id="composerGuess2" class="form-text text-light">Mozart </small>
                                     </div>
-                                    <!-- <input type="text" class="form-control bg-dark text-light"
-                                    aria-label="Text input with checkbox"><br> -->
+
                                     <div class="col">
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">
@@ -141,8 +133,7 @@
                                         <small id="composerGuess3" class="form-text text-light">Mendelssohn </small>
                                     </div>
                                     <div class="col">
-                                        <!-- <input type="text" class="form-control bg-dark text-light"
-                                    aria-label="Text input with checkbox"> -->
+
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">
                                                 <input id="radio4" type="radio" height="10px" width="10px"
@@ -151,12 +142,10 @@
                                         </div>
                                         <small id="composerGuess4" class="form-text text-light">Vivaldi </small>
                                     </div>
-                                    <!-- <input type="text" class="form-control bg-dark text-light"
-                                    aria-label="Text input with checkbox"> -->
+
                                 </div>
                             </div>
-                            <!-- <input id="composerName" type="name" placeholder="Guess Composer Name" class="form-control"
-                                autocomplete="off"> -->
+
                         </div>
                         <div class="form-group">
                             <label for="gameScore" class="text-light">Game Score</label>
@@ -183,13 +172,6 @@
 
                 <div class="col-sm text-light animated zoomInLeft delay-0s" style="background-color: black;"
                     id=composerClues class="center">
-                    <!-- "Click <strong>Start Game</strong>  " +
-                    "Then select Composer name guess. " +
-                    "Lose points for either: " +
-                    "  Taking too much time or, " +
-                    "  Making bad guesses. " +
-                    "But more clues and time used, means a lower final score.";
-                 -->
                     <strong>Watch Game Tutorial</strong> <br>
                     Click <strong>Start Game</strong> <br>
                     Guess three separate composer names.<br>

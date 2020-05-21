@@ -142,12 +142,18 @@ $(document).ready(function () {
      * @function handleFailure
      * */
     const handleFailure = () => {
+        ++numberRounds;
         composerHelp.html("Yikes ... you blew it!");
         spinnerGrow.css({ display: "none" });
         successGif.css({ display: "none" });
         stopGameTimer();
         failureGif.css({ display: "block" });
         animateCSS("#failureGif", "zoomInRight");
+        delay();
+        if (numberRounds >= maxRounds) { endAll(); return; }
+        setTimeout(
+            () => restart(),
+            5000);
     }
 
 
@@ -156,14 +162,31 @@ $(document).ready(function () {
      * @function handleSuccess
      */
     const handleSuccess = () => {
+        ++numberRounds;
+        ++correctGuess;
+        gameScoreTotal = gameScoreTotal + gameScore;
         composerHelp.html("SUCCESS ... GREAT WORK!");
         spinnerGrow.css({ display: "none" });
         failureGif.css({ display: "none" });
         stopGameTimer();
         successGif.css({ display: "block" });
         animateCSS("#successGif", "zoomInRight");
+        if (numberRounds >= maxRounds) { endAll(); return; }
+        setTimeout(
+            () => restart(),
+            5000);
     }
 
+    const delay = () => {
+
+    }
+
+    const endAll = () => {
+        composerHelp.html("Total Score: " + gameScoreTotal + " with " + correctGuess + " correct out of " + maxRounds);
+        correctGuess = 0;
+        numberRounds = 0;
+        gameScoreTotal = 0;
+    }
 
     /**
      * Called from {@link restart} to set game timer then calls {@link updateScore} to react to current hint/guess conditions
@@ -418,13 +441,13 @@ $(document).ready(function () {
 </div>
 
 <nav>
-    <h2><a href="index.html">Trivia Game</a></h2><h3>Events</h3><ul><li><a href="global.html#event:#pausebuttonclickcalls%257B@linkpauseAudio%257D">#pause button click calls {@link pauseAudio}</a></li><li><a href="global.html#event:#playbuttonclickcalls%257B@linkplayAudio%257D">#play button click calls {@link playAudio}</a></li><li><a href="global.html#event:#playVideobuttonclickcalls%257B@linkplayVideo%257D">#playVideo button click calls {@link playVideo}</a></li><li><a href="global.html#event:#radio1calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio1 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio2calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio2 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio3calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio3 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio4calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio4 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#startbuttonclickcalls%257B@linkrestart%257Dtostartthegame">#start button click calls {@link restart} to start the game</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animateCSS">animateCSS</a></li><li><a href="global.html#badGuess">badGuess</a></li><li><a href="global.html#chooseComposer">chooseComposer</a></li><li><a href="global.html#composerArray">composerArray</a></li><li><a href="global.html#composerAudio">composerAudio</a></li><li><a href="global.html#composerClues">composerClues</a></li><li><a href="global.html#composerGuess1">composerGuess1</a></li><li><a href="global.html#composerGuess2">composerGuess2</a></li><li><a href="global.html#composerGuess3">composerGuess3</a></li><li><a href="global.html#composerGuess4">composerGuess4</a></li><li><a href="global.html#composerHelp">composerHelp</a></li><li><a href="global.html#composerIndex">composerIndex</a></li><li><a href="global.html#composerName">composerName</a></li><li><a href="global.html#composerNameGuess">composerNameGuess</a></li><li><a href="global.html#composerNames">composerNames</a></li><li><a href="global.html#composerPhoto">composerPhoto</a></li><li><a href="global.html#failureGif">failureGif</a></li><li><a href="global.html#gameComposer">gameComposer</a></li><li><a href="global.html#gameComposerVideo">gameComposerVideo</a></li><li><a href="global.html#gameInstructions">gameInstructions</a></li><li><a href="global.html#gameOn">gameOn</a></li><li><a href="global.html#gamePointsPerSecond">gamePointsPerSecond</a></li><li><a href="global.html#gameScore">gameScore</a></li><li><a href="global.html#gameScoreId">gameScoreId</a></li><li><a href="global.html#gameStartScore">gameStartScore</a></li><li><a href="global.html#goodGuess">goodGuess</a></li><li><a href="global.html#guessCount">guessCount</a></li><li><a href="global.html#handleFailure">handleFailure</a></li><li><a href="global.html#handleSuccess">handleSuccess</a></li><li><a href="global.html#hints">hints</a></li><li><a href="global.html#hintTimerCount">hintTimerCount</a></li><li><a href="global.html#hintTimerMaxCount">hintTimerMaxCount</a></li><li><a href="global.html#maxCharacters">maxCharacters</a></li><li><a href="global.html#notInComposerName">notInComposerName</a></li><li><a href="global.html#pauseAudio">pauseAudio</a></li><li><a href="global.html#playAudio">playAudio</a></li><li><a href="global.html#previousUserInputLength">previousUserInputLength</a></li><li><a href="global.html#radio1">radio1</a></li><li><a href="global.html#radio1Text">radio1Text</a></li><li><a href="global.html#radio2">radio2</a></li><li><a href="global.html#radio2Text">radio2Text</a></li><li><a href="global.html#radio3">radio3</a></li><li><a href="global.html#radio3Text">radio3Text</a></li><li><a href="global.html#radio4">radio4</a></li><li><a href="global.html#radio4Text">radio4Text</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restartYes">restartYes</a></li><li><a href="global.html#setComposerNames">setComposerNames</a></li><li><a href="global.html#spinnerGrow">spinnerGrow</a></li><li><a href="global.html#startGameTimer">startGameTimer</a></li><li><a href="global.html#stopGameTimer">stopGameTimer</a></li><li><a href="global.html#successGif">successGif</a></li><li><a href="global.html#timerID">timerID</a></li><li><a href="global.html#top">top</a></li><li><a href="global.html#updateHints">updateHints</a></li><li><a href="global.html#updateScore">updateScore</a></li><li><a href="global.html#updateTimerField">updateTimerField</a></li><li><a href="global.html#userInput">userInput</a></li></ul>
+    <h2><a href="index.html">Trivia Game</a></h2><h3>Events</h3><ul><li><a href="global.html#event:#pausebuttonclickcalls%257B@linkpauseAudio%257D">#pause button click calls {@link pauseAudio}</a></li><li><a href="global.html#event:#playbuttonclickcalls%257B@linkplayAudio%257D">#play button click calls {@link playAudio}</a></li><li><a href="global.html#event:#playVideobuttonclickcalls%257B@linkplayVideo%257D">#playVideo button click calls {@link playVideo}</a></li><li><a href="global.html#event:#radio1calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio1 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio2calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio2 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio3calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio3 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#radio4calls%257B@linkgoodGuess%257Dorifbadguesscalls%257B@linkbadGuess%257Dtostartthegame">#radio4 calls {@link goodGuess} or if bad guess calls {@link badGuess} to start the game</a></li><li><a href="global.html#event:#startbuttonclickcalls%257B@linkrestart%257Dtostartthegame">#start button click calls {@link restart} to start the game</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animateCSS">animateCSS</a></li><li><a href="global.html#badGuess">badGuess</a></li><li><a href="global.html#chooseComposer">chooseComposer</a></li><li><a href="global.html#composerArray">composerArray</a></li><li><a href="global.html#composerAudio">composerAudio</a></li><li><a href="global.html#composerClues">composerClues</a></li><li><a href="global.html#composerGuess1">composerGuess1</a></li><li><a href="global.html#composerGuess2">composerGuess2</a></li><li><a href="global.html#composerGuess3">composerGuess3</a></li><li><a href="global.html#composerGuess4">composerGuess4</a></li><li><a href="global.html#composerHelp">composerHelp</a></li><li><a href="global.html#composerIndex">composerIndex</a></li><li><a href="global.html#composerName">composerName</a></li><li><a href="global.html#composerNameGuess">composerNameGuess</a></li><li><a href="global.html#composerNames">composerNames</a></li><li><a href="global.html#composerPhoto">composerPhoto</a></li><li><a href="global.html#correctGuess">correctGuess</a></li><li><a href="global.html#failureGif">failureGif</a></li><li><a href="global.html#gameComposer">gameComposer</a></li><li><a href="global.html#gameComposerVideo">gameComposerVideo</a></li><li><a href="global.html#gameInstructions">gameInstructions</a></li><li><a href="global.html#gameOn">gameOn</a></li><li><a href="global.html#gamePointsPerSecond">gamePointsPerSecond</a></li><li><a href="global.html#gameScore">gameScore</a></li><li><a href="global.html#gameScoreId">gameScoreId</a></li><li><a href="global.html#gameScoreTotal">gameScoreTotal</a></li><li><a href="global.html#gameStartScore">gameStartScore</a></li><li><a href="global.html#goodGuess">goodGuess</a></li><li><a href="global.html#guessCount">guessCount</a></li><li><a href="global.html#handleFailure">handleFailure</a></li><li><a href="global.html#handleSuccess">handleSuccess</a></li><li><a href="global.html#hints">hints</a></li><li><a href="global.html#hintTimerCount">hintTimerCount</a></li><li><a href="global.html#hintTimerMaxCount">hintTimerMaxCount</a></li><li><a href="global.html#maxCharacters">maxCharacters</a></li><li><a href="global.html#maxRounds">maxRounds</a></li><li><a href="global.html#notInComposerName">notInComposerName</a></li><li><a href="global.html#numberRounds">numberRounds</a></li><li><a href="global.html#pauseAudio">pauseAudio</a></li><li><a href="global.html#playAudio">playAudio</a></li><li><a href="global.html#previousUserInputLength">previousUserInputLength</a></li><li><a href="global.html#radio1">radio1</a></li><li><a href="global.html#radio1Text">radio1Text</a></li><li><a href="global.html#radio2">radio2</a></li><li><a href="global.html#radio2Text">radio2Text</a></li><li><a href="global.html#radio3">radio3</a></li><li><a href="global.html#radio3Text">radio3Text</a></li><li><a href="global.html#radio4">radio4</a></li><li><a href="global.html#radio4Text">radio4Text</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restartYes">restartYes</a></li><li><a href="global.html#setComposerNames">setComposerNames</a></li><li><a href="global.html#spinnerGrow">spinnerGrow</a></li><li><a href="global.html#startGameTimer">startGameTimer</a></li><li><a href="global.html#stopGameTimer">stopGameTimer</a></li><li><a href="global.html#successGif">successGif</a></li><li><a href="global.html#timerID">timerID</a></li><li><a href="global.html#top">top</a></li><li><a href="global.html#updateHints">updateHints</a></li><li><a href="global.html#updateScore">updateScore</a></li><li><a href="global.html#updateTimerField">updateTimerField</a></li><li><a href="global.html#userInput">userInput</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Feb 27 2020 15:25:56 GMT-0600 (Central Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu May 21 2020 08:52:17 GMT-0500 (Central Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
